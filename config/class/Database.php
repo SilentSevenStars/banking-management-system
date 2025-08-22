@@ -15,5 +15,9 @@
                 die("Connection error: <br>".$e);
             }
         }
+        public function __destruct()
+        {
+            $this->conn->close();
+        }
     }
 ?>
