@@ -85,5 +85,23 @@
                 die("Error while deleting data! . <br>".$e);
             }
         }
+
+        public function search($row, $where)
+        {
+            try {
+                $cond=$types="";
+                    foreach ($where as $key => $value) {
+                        $cond .= $key . " LIKE ? OR ";
+                        $types .= substr(gettype($value),0,1);
+                    }
+                    $cond = substr($cond,0,-3);
+                    $stmt = $this->conn->prepare("SELECT $row FROM $this->table WHERE $cond");
+                    $stmt->bind_param($types, ...array_values($where));
+                $stmt->execute();
+                $this->res = $stmt->get_result();
+            } catch (Exception $e) {
+                die("Error requesting data!. <br>". $e);
+            }
+        }
     }
 ?>
