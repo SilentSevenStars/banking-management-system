@@ -3,7 +3,7 @@
         private $servername = "localhost";
         private $username = "root";
         private $password = "";
-        private $db = "bank";
+        private $db = "bank_db";
         public $conn;
         public $res;
 

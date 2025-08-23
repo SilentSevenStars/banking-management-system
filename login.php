@@ -20,7 +20,7 @@
       <img src="images/bank-logo.png" alt="Bank Logo" class="w-20 mb-4"/>
       <h2 class="text-xl font-semibold text-blue-900 mb-6">WELCOME BACK</h2>
 
-      <form method="POST" action="backend/request.php" class="w-full max-w-xs space-y-4">
+      <form method="POST" id="login" action="config/request.php" class="w-full max-w-xs space-y-4">
         <input type="hidden" name="action" value="login">
 
         <div class="relative">
@@ -41,7 +41,7 @@
 
         <button type="submit"
                 class="w-full bg-blue-900 text-white py-3 rounded-lg shadow-md hover:bg-blue-800 transition">
-          Login
+          login
         </button>
 
         <div class="flex justify-between mt-2 text-sm">
@@ -60,6 +60,13 @@
       icon.classList.toggle("fa-eye-slash");
       icon.classList.toggle("fa-eye");
     }
+
+    $('#login').on('submit', function(e){
+      e.preventDefault
+      $.ajax(
+        
+      )
+    })
   </script>
 </body>
 </html>
