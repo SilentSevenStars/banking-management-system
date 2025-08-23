@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report & Analysis - PRT Bank</title>
+    <script type="text/javascript" src="assets/js/tailwind.js"></script>
+    <script type="text/javascript" src="assets/js/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen">
+        <?php include 'layout/sidebar.php'; ?>
+
+        <main class="flex-1 p-6 overflow-y-auto">
+            <h2 class="text-3xl font-bold mb-8 text-gray-800"> Reports & Analysis</h2>
+
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition text-center">
+                    <h3 class="text-gray-500 text-sm">Total Deposits</h3>
+                    <p class="text-3xl font-bold text-green-600 mt-2">₱<?= number_format($summary['deposit'], 2) ?></p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition text-center">
+                    <h3 class="text-gray-500 text-sm">Total Withdrawals</h3>
+                    <p class="text-3xl font-bold text-red-600 mt-2">₱<?= number_format($summary['withdraw'], 2) ?></p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition text-center">
+                    <h3 class="text-gray-500 text-sm">Total Balance</h3>
+                    <p class="text-3xl font-bold text-blue-600 mt-2">₱<?= number_format($summary['balance'], 2) ?></p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow mb-8">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">Monthly Income vs Expenses</h3>
+                <canvas id="reportChart" style="height:450px;"></canvas>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow flex gap-4">
+                <a href="export_reports.php?type=csv" class="px-5 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition">Export CSV</a>
+                <a href="export_reports.php?type=xlsx" class="px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">Export Excel</a>
+                <a href="export_reports.php?type=pdf" class="px-5 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition">Export PDF</a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const ctx = document.getElementById('reportChart').getContext('2d');
+            const chartData = <?= json_encode($chartData) ?>;
+
+            if (chartData.length > 0) {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.map(r => r.month),
+                        datasets: [{
+                                label: 'Deposits',
+                                data: chartData.map(r => r.deposits ? Number(r.deposits) : 0),
+                                backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                                borderRadius: 8
+                            },
+                            {
+                                label: 'Withdrawals',
+                                data: chartData.map(r => r.withdrawals ? Number(r.withdrawals) : 0),
+                                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                                borderRadius: 8
+                            },
+                            {
+                                label: 'Balance',
+                                type: 'line',
+                                data: chartData.map(r => (Number(r.deposits) - Number(r.withdrawals))),
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 5,
+                                pointBackgroundColor: 'rgba(59, 130, 246, 1)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                backgroundColor: '#1f2937',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: '#374151',
+                                borderWidth: 1
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: '#4b5563'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#4b5563'
+                                },
+                                grid: {
+                                    color: '#e5e7eb'
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                document.getElementById('reportChart').replaceWith("⚠️ No data available for chart.");
+            }
+        });
+    </script>
+</body>
+
+</html>
