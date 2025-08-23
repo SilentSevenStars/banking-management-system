@@ -7,7 +7,8 @@
     <title>Dashboard - PRT Bank</title>
     <script type="text/javascript" src="assets/js/tailwind.js"></script>
     <script type="text/javascript" src="assets/js/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+     <script type="text/javascript" src="assets/js/chart.js"></script>
 </head>
 
 <body class="bg-gray-100 font-sans">
