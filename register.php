@@ -19,8 +19,7 @@
       <img src="images/bank-logo.png" alt="Bank Logo" class="w-20 mb-4">
       <h2 class="text-xl font-semibold text-blue-900 mb-6">CREATE YOUR ACCOUNT</h2>
 
-      <form method="POST" action="backend/request.php" class="w-full max-w-xs space-y-4">
-        <input type="hidden" name="action" value="register">
+      <form method="POST" action="config/request.php" class="w-full max-w-xs space-y-4">
 
         <div class="relative">
           <input type="text" name="fullname" placeholder="Full Name" required
@@ -62,10 +61,7 @@
           </span>
         </div>
 
-        <button type="submit"
-                class="w-full bg-blue-900 text-white py-3 rounded-lg shadow-md hover:bg-blue-800 transition">
-          Register
-        </button>
+        <input type="submit" value="Register" name="register"  class="w-full bg-blue-900 text-white py-3 rounded-lg shadow-md hover:bg-blue-800 transition">
 
         <p class="text-sm text-gray-600 mt-2">
           Already have an account? 

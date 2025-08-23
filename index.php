@@ -1,3 +1,6 @@
+<?php
+    session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -18,7 +21,7 @@
 
         <main class="flex-1 p-6 overflow-y-auto">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">
-                Welcome, <?= htmlspecialchars($fullname) ?>
+                Welcome, <?= $_SESSION['fullname'] ?>
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">

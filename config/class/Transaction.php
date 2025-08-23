@@ -2,9 +2,9 @@
     require_once "Database.php";
 
     class Transaction extends Database{
-        private $table = "transactions";
+        private $table = 'transactions';
 
-        public function insert($data)
+                public function insert($data)
         {
             try {
                 $table_column = implode(',',array_keys($data));
