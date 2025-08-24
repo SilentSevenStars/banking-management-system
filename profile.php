@@ -1,3 +1,12 @@
+<?php
+    session_start();
+
+    if(!isset($_SESSION['user_id']))
+        header("Location: login.php");
+
+    $id = $_SESSION['user_id'];
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -23,32 +32,87 @@
             <?php endif; ?>
 
             <div class="bg-white rounded-xl shadow-lg p-6 border">
-                <form method="POST" class="space-y-4">
+                <form method="POST" id="updateProfileForm" class="space-y-4">
                     <div>
                         <label class="block text-gray-700">Username</label>
-                        <input type="text" name="username" value="<?= htmlspecialchars($username) ?>" class="w-full p-2 border rounded" required>
+                        <input type="text" name="username" id="username" class="w-full p-2 border rounded" required>
                     </div>
                     <div>
                         <label class="block text-gray-700">Email (readonly)</label>
-                        <input type="email" value="<?= htmlspecialchars($email) ?>" class="w-full p-2 border rounded bg-gray-100" disabled>
+                        <input type="email" id="email" class="w-full p-2 border rounded bg-gray-100" disabled>
                     </div>
                     <div>
                         <label class="block text-gray-700">Phone</label>
-                        <input type="text" name="phone" value="<?= htmlspecialchars($phone) ?>" class="w-full p-2 border rounded">
+                        <input type="text" name="phone" id="phone" class="w-full p-2 border rounded">
                     </div>
                     <div>
                         <label class="block text-gray-700">Address</label>
-                        <input type="text" name="address" value="<?= htmlspecialchars($address) ?>" class="w-full p-2 border rounded">
+                        <input type="text" name="address" id="address" class="w-full p-2 border rounded">
                     </div>
                     <div>
                         <label class="block text-gray-700 font-bold">Current Balance:</label>
-                        <p class="text-xl text-green-600 font-semibold">₱<?= number_format($balance, 2) ?></p>
+                        <p class="text-xl text-green-600 font-semibold" id="balance">₱0.00</p>
                     </div>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">Update Profile</button>
+                    <input type="hidden" name="id" id="id">
+                    <input type="submit" value="Update Profile" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500" name="updateProfile">
                 </form>
             </div>
         </main>
     </div>
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+            loadProfile(<?= $id ?>)
+        })
+
+        function loadProfile(user_id){
+            $.ajax({
+                url: "config/request.php",
+                method: "POST",
+                data: {
+                    "get_profile": true,
+                    "userId": user_id,
+                }, 
+                success: function(result){
+                    let datas = JSON.parse(result)
+                    datas.forEach(function(data) {
+                        $('#id').val(data['id'])
+                        $('#username').val(data['username'])
+                        $('#email').val(data['email'])
+                        $('#phone').val(data['phone'])
+                        $('#address').val(data['address'])
+                        $('#balance').text("₱" + parseFloat(data['balance']).toLocaleString(undefined, {minimumFractionDigits: 2}))
+                    })
+                },
+                error: function(e){
+                    alert("Something went wrong")
+                }
+            })
+        }
+
+        $('#updateProfileForm').on('submit', function(e){
+            e.preventDefault()
+            var datas = $(this).serializeArray()
+            var data_array = {}
+            $.map(datas, function(data){
+                data_array[data['name']] = data['value']
+            })
+            $.ajax({
+                url: "config/request.php",
+                method: "POST",
+                data: {
+                    'update_profile': true,
+                    ...data_array
+                },
+                success: function(){
+                    loadProfile()
+                }, 
+                error: function(){
+                    alert("Something went wrong")
+                }
+            })
+        })
+    </script>
 </body>
 
 </html>
