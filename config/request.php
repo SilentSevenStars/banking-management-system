@@ -19,6 +19,7 @@ if (isset($_POST['login'])) {
     $auth->login($_POST);
 }
 if (isset($_POST['get_transaction'])) {
+    unset($_POST['get_transaction']);
     if (isset($_POST['userid'])) {
         $user_id = ['user_id' => $_POST['userid']];
         $transaction->select("*", $user_id);
@@ -43,4 +44,13 @@ if (isset($_POST['get_profile'])) {
 if(isset($_POST['update_profile'])){
     unset($_POST['update_profile']);
     $auth->update([...$_POST]);
+}
+if(isset($_GET['get_transaction'])){
+    unset($_GET['get_transaction']);
+    $transaction->filter("*", [...$_GET]);
+    $datas = [];
+    while ($row = $transaction->res->fetch_assoc()) {
+        array_push($datas, $row);
+    }
+    echo json_encode($datas);
 }

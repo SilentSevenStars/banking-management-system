@@ -45,6 +45,37 @@ class Transaction extends Database
             die("Error requesting data!. <br>" . $e);
         }
     }
+    public function filter($row = "*", $where = NULL)
+    {
+        try {
+            if (!is_null($where)) {
+                $cond = $types = "";
+                foreach ($where as $key => $value) {
+                    if (!empty($value) or $value != "all") {
+                        if ($key === "from") {
+                            $cond .= "DATE(created_at) >= ? AND ";
+                            $types .= substr(gettype($value),0,1);
+                        } elseif ($key === "to") {
+                            $cond .= "DATE(created_at) <= ? AND ";
+                            $types .= substr(gettype($value),0,1);
+                        } else {
+                            $cond .= $key . " = ? AND ";
+                            $types .= substr(gettype($value), 0, 1);
+                        }
+                    }
+                }
+                $cond = substr($cond, 0, -4);
+                $stmt = $this->conn->prepare("SELECT $row FROM $this->table WHERE $cond");
+                $stmt->bind_param($types, ...array_values($where));
+            } else {
+                $stmt = $this->conn->prepare("SELECT $row FROM $this->table");
+            }
+            $stmt->execute();
+            $this->res = $stmt->get_result();
+        } catch (Exception $e) {
+            die("Error requesting data!. <br>" . $e);
+        }
+    }
 
     public function update($data)
     {
