@@ -56,7 +56,7 @@ if (!isset($_SESSION['user_id']))
                     <a href="transaction.php" class="px-4 py-2 bg-gray-500 text-white rounded" onclick="loadTransaction(<?= $_SESSION['user_id'] ?>)">Reset</a>
                 </div>
                 <div class="flex items-end ml-auto">
-                    <a href="transaction.php?export=csv" class="px-4 py-2 bg-green-600 text-white rounded">Export CSV</a>
+                    <button onclick="exportCSV(<?= $_SESSION['user_id'] ?>)" class="px-4 py-2 bg-green-600 text-white rounded">Export CSV</button>
                 </div>
             </form>
 
@@ -145,6 +145,22 @@ if (!isset($_SESSION['user_id']))
                     $('#tBodyTransaction').html(tBody)
                 },
                 error: function() {
+                    alert("Something went wrong")
+                }
+            })
+        }
+        function exportCSV(user_id){
+            $.ajax({
+                url: "config/request.php",
+                method: "POST",
+                data: {
+                    "export_csv": true,
+                    "user_id": user_id,
+                },
+                success: function(){
+                    alert("Data are now exporting into csv")
+                }, 
+                error: function(){
                     alert("Something went wrong")
                 }
             })

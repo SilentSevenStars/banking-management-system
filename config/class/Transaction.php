@@ -135,4 +135,37 @@ class Transaction extends Database
             die("Error requesting data!. <br>" . $e);
         }
     }
+
+    public function exportCSV($row, $where)
+    {
+        try {
+            $cond = $types = "";
+                foreach ($where as $key => $value) {
+                    $cond .= $key . " = ? AND ";
+                    $types .= substr(gettype($value), 0, 1);
+                }
+                $cond = substr($cond, 0, -4);
+                $stmt = $this->conn->prepare("SELECT $row FROM $this->table WHERE $cond ORDER BY date DESC");
+                $stmt->bind_param($types, ...array_values($where));
+            $stmt->execute();
+            $this->res = $stmt->get_result();
+
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=transactions.csv');
+            $output = fopen('php://output', 'w');
+            fputcsv($output, ['Type', 'Amount', 'Status', 'Date']);
+            while($row = $this->res->fetch_assoc()){
+                fputcsv($output, [
+                    ucfirst($row['type']),
+                    $row['amount'],
+                    ucfirst($row['status']),
+                    $row['date'],
+                ]);
+            }
+            fclose($output);
+            $stmt->close();
+        } catch (Exception $e) {
+            die("Error requesting data!. <br>" . $e);
+        }
+    }
 }

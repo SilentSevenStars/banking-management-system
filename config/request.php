@@ -54,3 +54,7 @@ if(isset($_GET['get_transaction'])){
     }
     echo json_encode($datas);
 }
+if(isset($_POST['export_csv'])){
+    unset($_POST['export_csv']);
+    $transaction->exportCSV("type, amount, status, date", [...$_POST]);
+}
