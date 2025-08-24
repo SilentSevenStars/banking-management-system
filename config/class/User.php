@@ -40,7 +40,7 @@ class User extends Database
                 $stmt = $this->conn->prepare("SELECT $row FROM $this->table");
             }
             $stmt->execute();
-            $this->res = $stmt;
+            $this->res = $stmt->get_result();
 
         } catch (Exception $e) {
             die("Error requesting data!. <br>" . $e);

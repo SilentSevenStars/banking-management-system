@@ -1,8 +1,10 @@
 <?php
     require_once "class/user.php";
     require_once "class/Auth.php";
+    require_once "class/Transaction.php";
 
     $auth = new Auth;
+    $transaction = new Transaction;
 
     if(isset($_POST['register'])){
         unset($_POST['register']);
@@ -15,5 +17,16 @@
     if(isset($_POST['login'])){
         unset($_POST['login']);
         $auth->login($_POST);
+    }
+    if(isset($_POST['get_transaction'])){
+        if(isset($_POST['userid'])){
+            $user_id = ['user_id' => $_POST['userid']];
+            $transaction->select("*", $user_id);
+        }
+        $datas = [];
+        while($row = $transaction->res->fetch_assoc()){
+            array_push($datas, $row);
+        }
+        echo json_encode($datas);
     }
 ?>

@@ -1,5 +1,16 @@
 <?php
-    session_start();
+require_once "config/class/User.php";
+session_start();
+
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['fullname'])) {
+    header("Location: login.php");
+}
+
+$user = new User;
+
+$id = ["id" => $_SESSION['user_id']];
+$user->select("*", $id);
+$data = $user->res->fetch_assoc();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +22,7 @@
     <script type="text/javascript" src="assets/js/tailwind.js"></script>
     <script type="text/javascript" src="assets/js/jquery.min.js"></script>
     <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
-     <script type="text/javascript" src="assets/js/chart.js"></script>
+    <script type="text/javascript" src="assets/js/chart.js"></script>
 </head>
 
 <body class="bg-gray-100 font-sans">
@@ -28,7 +39,7 @@
                 <div class="bg-white rounded-xl shadow-lg p-4 text-center border">
                     <h3 class="text-gray-500">Balance</h3>
                     <p id="balanceText" class="text-2xl font-bold text-gray-800">
-                        ₱<?= number_format($balance, 2) ?>
+                        ₱<?= number_format($data['balance'], 2) ?>
                     </p>
                 </div>
                 <div class="bg-white rounded-xl shadow-lg p-4 text-center border">
@@ -78,28 +89,8 @@
                                 <th class="pb-2 text-gray-500">Date</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php foreach ($transactions as $tx):
-                                $typeDisplay = ucfirst($tx['type']);
-                                $amount = floatval($tx['amount']);
-                                if ($amount < 0) {
-                                    $sign = '-';
-                                    $amountDisplay = abs($amount);
-                                    $amountColor = 'text-red-500';
-                                } else {
-                                    $sign = '+';
-                                    $amountDisplay = $amount;
-                                    $amountColor = 'text-green-500';
-                                }
-                                $statusColor = strtolower($tx['status']) === 'success' ? 'text-green-500' : 'text-red-500';
-                            ?>
-                                <tr class="border-b hover:bg-gray-100">
-                                    <td><?= $typeDisplay ?></td>
-                                    <td class="<?= $amountColor ?> font-semibold"><?= $sign ?>₱<?= number_format($amountDisplay, 2) ?></td>
-                                    <td class="<?= $statusColor ?> font-semibold"><?= ucfirst($tx['status']) ?></td>
-                                    <td><?= $tx['date'] ?></td>
-                                </tr>
-                            <?php endforeach; ?>
+                        <tbody id="tBodyTransaction">
+                        
                         </tbody>
                     </table>
                 </div>
@@ -109,6 +100,9 @@
     </div>
 
     <script>
+        $(document).ready(function() {
+            loadTransaction(<?= $_SESSION['user_id'] ?>);
+        })
         const ctx = document.getElementById('financeChart');
         new Chart(ctx, {
             type: 'line',
@@ -178,6 +172,46 @@
                 console.error(error);
                 alert("Error processing transaction.");
             }
+        }
+
+        function loadTransaction(user_id) {
+            $.ajax({
+                url: "config/request.php",
+                method: "POST",
+                data: {
+                    "get_transaction": true,
+                    "userid": user_id,
+                },
+                success: function(result) {
+                    let tBody = ''
+                    let datas = JSON.parse(result)
+                    if (datas.length > 0) {
+                        datas.forEach(function(data) {
+                            let typeDisplay = tx.type.charAt(0).toUpperCase() + tx.type.slice(1);
+                            let amount = parseFloat(tx.amount);
+                            let sign = amount < 0 ? '-' : '+';
+                            let amountDisplay = Math.abs(amount).toFixed(2);
+                            let amountColor = amount < 0 ? 'text-red-500' : 'text-green-500';
+                            let statusColor = tx.status.toLowerCase() === 'success' ? 'text-green-500' : 'text-red-500';
+
+                            tBody += `
+                        <tr class="border-b hover:bg-gray-100">
+                            <td>${typeDisplay}${data['type']}</td>
+                            <td class="${amountColor} font-semibold">${sign}₱${amountDisplay}${data['amount']}</td>
+                            <td class="${statusColor} font-semibold">${tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}${data['status']}</td>
+                            <td>${tx.date}${data['date']}</td>
+                        </tr>
+                    `;
+                        })
+                    } else {
+                        tBody = `<tr><td colspan="4" class="text-center text-gray-500">No transaction found</td></tr>`
+                    }
+                    $('#tBodyTransaction').html(tBody);
+                },
+                error: function(){
+                    alert("Something went wrong");
+                }
+            })
         }
     </script>
 </body>
