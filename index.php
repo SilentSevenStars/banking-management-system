@@ -31,15 +31,15 @@ $data = $user->res->fetch_assoc();
         <?php include 'layout/sidebar.php'; ?>
 
         <main class="flex-1 p-6 overflow-y-auto">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">
-                Welcome, <?= $_SESSION['fullname'] ?>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6" id="greeting">
+
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 <div class="bg-white rounded-xl shadow-lg p-4 text-center border">
                     <h3 class="text-gray-500">Balance</h3>
                     <p id="balanceText" class="text-2xl font-bold text-gray-800">
-                        ₱<?= number_format($data['balance'], 2) ?>
+
                     </p>
                 </div>
                 <div class="bg-white rounded-xl shadow-lg p-4 text-center border">
@@ -65,12 +65,13 @@ $data = $user->res->fetch_assoc();
                 <div class="bg-white rounded-xl shadow-lg p-6 border">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Transaction</h3>
                     <form id="quickTransactionForm" class="space-y-4">
+                        <input type="hidden" name="balance" id="balance">
                         <input type="number" id="amountInput" name="amount" placeholder="Enter Amount"
                             class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500" required>
                         <div class="flex space-x-2">
-                            <button type="button" onclick="submitTransaction('deposit')"
+                            <button type="button" onclick="submitTransaction('deposit', <?= $_SESSION['user_id'] ?>)"
                                 class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-500">Deposit</button>
-                            <button type="button" onclick="submitTransaction('withdraw')"
+                            <button type="button" onclick="submitTransaction('withdraw', <?= $_SESSION['user_id'] ?>)"
                                 class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500">Withdraw</button>
                         </div>
                     </form>
@@ -90,7 +91,7 @@ $data = $user->res->fetch_assoc();
                             </tr>
                         </thead>
                         <tbody id="tBodyTransaction">
-                        
+
                         </tbody>
                     </table>
                 </div>
@@ -101,7 +102,8 @@ $data = $user->res->fetch_assoc();
 
     <script>
         $(document).ready(function() {
-            loadTransaction(<?= $_SESSION['user_id'] ?>);
+            loadTransaction(<?= $_SESSION['user_id'] ?>)
+            loadInfo(<?= $_SESSION['user_id'] ?>)
         })
         const ctx = document.getElementById('financeChart');
         new Chart(ctx, {
@@ -130,47 +132,83 @@ $data = $user->res->fetch_assoc();
             }
         });
 
-        async function submitTransaction(type) {
-            const amount = document.getElementById("amountInput").value;
-            if (!amount || amount <= 0) {
-                alert("Enter a valid amount.");
-                return;
-            }
-
-            try {
-                const response = await fetch("transaction_api.php", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: "amount=" + encodeURIComponent(amount) + "&type=" + encodeURIComponent(type)
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    document.getElementById("balanceText").textContent = "₱" + parseFloat(data.newBalance).toFixed(2);
-
-                    const tbody = document.querySelector("table tbody");
-                    const row = document.createElement("tr");
-                    row.className = "border-b hover:bg-gray-100";
-                    row.innerHTML = `
-        <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
-        <td class="${type === "withdraw" ? "text-red-500" : "text-green-500"} font-semibold">
-          ${type === "withdraw" ? "-" : "+"}₱${parseFloat(amount).toFixed(2)}
-        </td>
-        <td class="text-green-500 font-semibold">Success</td>
-        <td>${new Date().toLocaleString()}</td>
-      `;
-                    tbody.prepend(row);
-
-                    document.getElementById("amountInput").value = "";
-                } else {
-                    alert(data.message || "Transaction failed.");
+        function loadInfo(user_id) {
+            $.ajax({
+                url: "config/request.php",
+                method: "POST",
+                data: {
+                    'get_info': true,
+                    'id': user_id,
+                },
+                success: function(result) {
+                    let datas = JSON.parse(result)
+                    if (datas.length > 0) {
+                        datas.forEach(function(data) {
+                            $('#quickTransactionForm #balance').val(data['balance'])
+                            $('#greeting').html(`Welcome, ${data['fullname']}`)
+                            $('#balanceText').html(`₱ ${parseFloat(data['balance'])}`)
+                        })
+                    } else {
+                        $('#quickTransactionForm #balance').val(0.00)
+                        $('#greeting').html(`Welcome, User`)
+                        $('#balanceText').html(`₱ 0.00`)
+                    }
                 }
-            } catch (error) {
-                console.error(error);
-                alert("Error processing transaction.");
+            })
+        }
+
+        function submitTransaction(type, user_id) {
+            let amount = $('#amountInput').val();
+            let balance = $('#quickTransactionForm #balance').val();
+            amount = parseFloat(amount);
+            balance = parseFloat(balance);
+
+            if (type === 'deposit') {
+                if (amount > 0) {
+                    balance = balance + amount
+                    console.log(balance)
+                    $.ajax({
+                        url: "config/request.php",
+                        method: "POST",
+                        data: {
+                            'deposit': true,
+                            'user_id': user_id,
+                            'type': type,
+                            'amount': amount,
+                            'status': 'success',
+                            'balance': balance,
+                        },
+                        success: function() {
+                            loadInfo(user_id);
+                            loadTransaction(user_id);
+                        }
+                    })
+                } else {
+                    alert("Invalid amount, It must be greater than zero")
+                }
+            }
+            if (type === 'withdraw') {
+                if (balance > amount && amount > 0) {
+                    balance -= amount;
+                    $.ajax({
+                        url: "config/request.php",
+                        method: "POST",
+                        data: {
+                            'withdraw': true,
+                            'user_id': user_id,
+                            'type': type,
+                            'amount': amount,
+                            'status': 'success',
+                            'balance': balance,
+                        },
+                        success: function() {
+                            loadInfo(user_id);
+                            loadTransaction(user_id);
+                        }
+                    })
+                } else {
+                    alert("Invalid amount, It must be greater than zero")
+                }
             }
         }
 
@@ -183,32 +221,32 @@ $data = $user->res->fetch_assoc();
                     "userid": user_id,
                 },
                 success: function(result) {
-                    let tBody = ''
-                    let datas = JSON.parse(result)
+                    let tBody = '';
+                    let datas = JSON.parse(result);
                     if (datas.length > 0) {
                         datas.forEach(function(data) {
-                            let typeDisplay = tx.type.charAt(0).toUpperCase() + tx.type.slice(1);
-                            let amount = parseFloat(tx.amount);
-                            let sign = amount < 0 ? '-' : '+';
-                            let amountDisplay = Math.abs(amount).toFixed(2);
-                            let amountColor = amount < 0 ? 'text-red-500' : 'text-green-500';
-                            let statusColor = tx.status.toLowerCase() === 'success' ? 'text-green-500' : 'text-red-500';
+                            let typeDisplay = data.type.charAt(0).toUpperCase() + data.type.slice(1);
+                            let amount = parseFloat(data.amount);
+                            let sign = data.type === "withdraw" ? '-' : '+';
+                            let amountDisplay = amount.toFixed(2);
+                            let amountColor = data.type === "withdraw" ? 'text-red-500' : 'text-green-500';
+                            let statusColor = data.status.toLowerCase() === 'success' ? 'text-green-500' : 'text-red-500';
 
                             tBody += `
                         <tr class="border-b hover:bg-gray-100">
-                            <td>${typeDisplay}${data['type']}</td>
-                            <td class="${amountColor} font-semibold">${sign}₱${amountDisplay}${data['amount']}</td>
-                            <td class="${statusColor} font-semibold">${tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}${data['status']}</td>
-                            <td>${tx.date}${data['date']}</td>
+                            <td>${typeDisplay}</td>
+                            <td class="${amountColor} font-semibold">${sign}₱${amountDisplay}</td>
+                            <td class="${statusColor} font-semibold">${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</td>
+                            <td>${data.date}</td>
                         </tr>
                     `;
                         })
                     } else {
-                        tBody = `<tr><td colspan="4" class="text-center text-gray-500">No transaction found</td></tr>`
+                        tBody = `<tr><td colspan="4" class="text-center text-gray-500">No transaction found</td></tr>`;
                     }
                     $('#tBodyTransaction').html(tBody);
                 },
-                error: function(){
+                error: function() {
                     alert("Something went wrong");
                 }
             })

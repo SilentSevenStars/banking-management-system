@@ -18,6 +18,34 @@ if (isset($_POST['login'])) {
     unset($_POST['login']);
     $auth->login($_POST);
 }
+if(isset($_POST['get_info'])){
+    unset($_POST['get_info']);
+    $auth->select("*",[...$_POST]);
+    $datas = [];
+    while($row = $auth->res->fetch_assoc()){
+        array_push($datas, $row);
+    }
+    echo json_encode($datas);
+}
+if(isset($_POST['deposit'])){
+    unset($_POST['deposit']);
+    $auth->update([
+        'balance' => $_POST['balance'],
+        'id'      => $_POST['user_id']
+    ]);
+    unset($_POST['balance']); 
+    $transaction->insert([...$_POST]);
+}
+
+if(isset($_POST['withdraw'])){
+    unset($_POST['withdraw']);
+    $auth->update([
+        'balance' => $_POST['balance'],
+        'id'      => $_POST['user_id']
+    ]);
+    unset($_POST['balance']); 
+    $transaction->insert([...$_POST]);
+}
 if (isset($_POST['get_transaction'])) {
     unset($_POST['get_transaction']);
     if (isset($_POST['userid'])) {
@@ -41,8 +69,15 @@ if (isset($_POST['get_profile'])) {
         echo json_encode($datas);
     }
 }
-if(isset($_POST['update_profile'])){
+if (isset($_POST['update_profile'])) {
     unset($_POST['update_profile']);
+
+    if (isset($_POST['password']) && $_POST['password'] === '') {
+        unset($_POST['password']);
+    } elseif (isset($_POST['password']) && $_POST['password'] !== '') {
+        $_POST['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    }
+
     $auth->update([...$_POST]);
 }
 if(isset($_GET['get_transaction'])){

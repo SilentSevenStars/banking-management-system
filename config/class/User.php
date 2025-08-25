@@ -106,21 +106,4 @@ class User extends Database
         }
     }
 
-    // public function login($data)
-    // {
-    //     $stmt = $this->conn->prepare("SELECT * FROM $this->table WHERE email = ?");
-    //     $stmt->bind_param("s", $data['username']);
-    //     $stmt->execute();
-    //     $this->res = $stmt->get_result();
-    //     if($this->res->num_rows === 1){
-    //         $user = $this->res->fetch_assoc();
-    //         if(password_verify($data['password'], $user['password'])){
-    //             return $user;
-    //         } else {
-    //             echo "Incorrect email or password";
-    //         }
-    //     } else {
-    //         echo "Incorrect email or password";
-    //     }
-    // }
 }

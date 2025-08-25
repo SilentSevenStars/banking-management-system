@@ -98,11 +98,13 @@ if (!isset($_SESSION['user_id']))
         function loadTransaction(user_id, datas = null) {
             let ajaxData = {}
             if (datas) {
+                mt = "GET"
                 ajaxData = {
                     'get_transaction': true,
                     ...datas
                 }
             } else {
+                mt = "POST"
                 ajaxData = {
                     'get_transaction': true,
                     'userid': user_id
@@ -110,7 +112,7 @@ if (!isset($_SESSION['user_id']))
             }
             $.ajax({
                 url: "config/request.php",
-                method: "GET",
+                method: mt,
                 data: ajaxData,
                 success: function(result) {
                     let tBody = ''

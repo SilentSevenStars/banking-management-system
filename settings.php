@@ -1,8 +1,8 @@
 <?php
-    session_start();
+session_start();
 
-    if(!isset($_SESSION['user_id']))
-        header("Location: login.php");
+if (!isset($_SESSION['user_id']))
+    header("Location: login.php");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,35 +22,80 @@
         <div class="flex-1 p-6 overflow-y-auto bg-white text-gray-900">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Account Settings</h2>
 
-            <?php if ($message): ?>
-                <div class="mb-4 p-3 rounded text-white <?= strpos($message, 'successfully') !== false ? 'bg-green-600' : 'bg-red-600' ?>">
-                    <?= $message ?>
-                </div>
-            <?php endif; ?>
-
             <div class="bg-white rounded-xl shadow-lg p-6 border max-w-lg">
-                <form method="POST">
+                <form method="POST" id="updateProfileForm">
                     <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Username</label>
-                        <input type="text" name="username" value="<?= htmlspecialchars($username) ?>"
+                        <label class="block text-gray-700 mb-1" for="username">Username</label>
+                        <input type="text" id="username" name="username"
                             class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" value="<?= htmlspecialchars($email) ?>"
+                        <label class="block text-gray-700 mb-1" for="email">Email</label>
+                        <input type="email" id="email" name="email"
                             class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">New Password (leave blank to keep current)</label>
-                        <input type="password" name="password"
+                        <label class="block text-gray-700 mb-1" for="password">New Password (leave blank to keep current)</label>
+                        <input type="password" id="password" name="password"
                             class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    <button type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">Save Changes</button>
+                    <input type="hidden" name="id" value="<?= $_SESSION['user_id'] ?>">
+                    <input type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500" value="Save Changes" name="updateProfile">
                 </form>
             </div>
         </div>
     </div>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            loadInfo(<?= $_SESSION['user_id'] ?>)
+        })
+
+        function loadInfo(user_id) {
+            $.ajax({
+                url: "config/request.php",
+                method: "POST",
+                data: {
+                    'get_profile': true,
+                    'userId': user_id,
+                },
+                success: function(result) {
+                    let datas = JSON.parse(result)
+                    if (datas.length > 0) {
+                        datas.forEach(function(data) {
+                            $('#username').val(data['username'])
+                            $('#email').val(data['email'])
+                        })
+                    }
+                }
+            })
+        }
+
+        $('#updateProfileForm').on('submit', function(e) {
+            e.preventDefault()
+            var datas = $(this).serializeArray()
+            var data_array = {}
+            $.map(datas, function(data) {
+                data_array[data['name']] = data['value']
+            })
+            console.log(data_array)
+            $.ajax({
+                url: "config/request.php",
+                method: "POST",
+                data: {
+                    'update_profile': true,
+                    ...data_array
+                },
+                success: function() {
+                    loadInfo()
+                    alert("Update Successfully")
+                },
+                error: function() {
+                    alert("Something went wrong")
+                }
+            })
+        })
+    </script>
 </body>
 
 </html>
