@@ -1,8 +1,8 @@
 <?php
-    session_start();
+session_start();
 
-    if(!isset($_SESSION['user_id']))
-        header("Location: login.php");
+if (!isset($_SESSION['user_id']))
+    header("Location: login.php");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,14 +39,12 @@
             <div class="grid grid-cols-2 gap-6 mb-6">
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-lg font-semibold mb-2">Available Balance</h3>
-                    <p class="text-2xl font-bold text-blue-600">
-                        ₱<?= number_format($availableBalance, 2) ?>
+                    <p class="text-2xl font-bold text-blue-600" id="availableBalance">
                     </p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-lg font-semibold mb-2">Current Balance</h3>
-                    <p class="text-2xl font-bold text-green-600">
-                        ₱<?= number_format($currentBalance, 2) ?>
+                    <p class="text-2xl font-bold text-green-600" id="balanceText">
                     </p>
                 </div>
             </div>
@@ -123,6 +121,12 @@
             </div>
         </main>
     </div>
+
+    <script>
+        $(document).ready(function () {
+            alert("try_alert works!");
+        });
+    </script>
 </body>
 
 </html>

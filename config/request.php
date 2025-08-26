@@ -2,9 +2,11 @@
 require_once "class/user.php";
 require_once "class/Auth.php";
 require_once "class/Transaction.php";
+require_once "class/LoanClass.php";
 
 $auth = new Auth;
 $transaction = new Transaction;
+$loan = new Loan;
 
 if (isset($_POST['register'])) {
     unset($_POST['register']);
@@ -92,4 +94,35 @@ if(isset($_GET['get_transaction'])){
 if(isset($_POST['export_csv'])){
     unset($_POST['export_csv']);
     $transaction->exportCSV("type, amount, status, date", [...$_POST]);
+}
+if(isset($_POST['get_balance'])){
+    unset($_POST['get_balance']);
+    $totalLoans = $loan->totalLoans($_POST['user_id']);
+
+    $availableBalance = 100000 - $totalLoans;
+    unset($_POST['status']);
+
+    $auth->select("balance", $_POST);
+    $data = $auth->res->fetch_assoc();
+    $currentBalance = $data['balance'] ?? 0;
+
+    $datas = [
+        'availableBalance' => $availableBalance,
+        'balance' => $currentBalance,
+    ];
+
+    echo json_encode($datas);  
+    exit;
+}
+
+if (isset($_POST['summary'])) {
+    $report = $transaction->getSummary($user_id);
+    echo json_encode($report);
+    exit;
+}
+
+if (isset($_POST['chart'])) {
+    $chart = $transaction->getChartData($user_id);
+    echo json_encode($chart);
+    exit;
 }

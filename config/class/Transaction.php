@@ -168,4 +168,42 @@ class Transaction extends Database
             die("Error requesting data!. <br>" . $e);
         }
     }
+
+    public function getSummary($user_id) {
+        $summary = ["deposit" => 0, "withdraw" => 0, "balance" => 0];
+        $stmt = $this->conn->prepare("
+            SELECT type, SUM(amount) as total 
+            FROM $this->table 
+            WHERE user_id=? AND status='success' 
+            GROUP BY type
+        ");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $summary[$row['type']] = $row['total'];
+        }
+        $summary['balance'] = $summary['deposit'] - $summary['withdraw'];
+        return $summary;
+    }
+
+    public function getChartData($user_id) {
+        $chartData = [];
+        $stmt = $this->conn->prepare("
+            SELECT DATE_FORMAT(created_at, '%Y-%m') as month, 
+                   SUM(CASE WHEN type='deposit' THEN amount ELSE 0 END) as deposits,
+                   SUM(CASE WHEN type='withdraw' THEN amount ELSE 0 END) as withdrawals
+            FROM $this->table
+            WHERE user_id=? AND status='success'
+            GROUP BY month
+            ORDER BY month ASC
+        ");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $chartData[] = $row;
+        }
+        return $chartData;
+    }
 }
