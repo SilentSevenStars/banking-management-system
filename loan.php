@@ -26,13 +26,13 @@ if (!isset($_SESSION['user_id'])) {
             <div class="grid grid-cols-2 gap-6 mb-6">
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-lg font-semibold mb-2">Available Balance</h3>
-                    <p class="text-2xl font-bold text-blue-600" id="availableBalance">
+                    <p class="text-2xl font-bold text-blue-600" id="availableBalanceDisplay">
 
                     </p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-lg font-semibold mb-2">Current Balance</h3>
-                    <p class="text-2xl font-bold text-green-600" id="balance">
+                    <p class="text-2xl font-bold text-green-600" id="balanceDisplay">
 
                     </p>
                 </div>
@@ -40,10 +40,12 @@ if (!isset($_SESSION['user_id'])) {
 
             <div class="bg-white p-6 rounded-lg shadow mb-6">
                 <h3 class="text-lg font-semibold mb-4">Apply for a Loan</h3>
-                <form action="loan_process.php" method="POST" class="space-y-4">
+                <form action="loan_process.php" id="loanForm" method="POST" class="space-y-4">
+                    <input type="hidden" name="balance" id="balance">
+                    <input type="hidden" name="availableBalance" id="availableBalance">
                     <div>
                         <label for="amount" class="block text-sm font-medium text-gray-700">Loan Amount</label>
-                        <input type="number" id="amount" name="amount" max="20000" required
+                        <input type="number" id="amount" name="amount" required
                             class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
@@ -104,8 +106,10 @@ if (!isset($_SESSION['user_id'])) {
                         let datas = JSON.parse(result);
 
                         if (datas && datas.availableBalance !== undefined && datas.balance !== undefined) {
-                            $('#availableBalance').html(`₱ ${parseFloat(datas.availableBalance).toFixed(2)}`);
-                            $('#balance').html(`₱ ${parseFloat(datas.balance).toFixed(2)}`);
+                            $('#availableBalance').val(datas.availableBalance)
+                            $('#balance').val(datas.balance)
+                            $('#availableBalanceDisplay').html(`₱ ${parseFloat(datas.availableBalance).toFixed(2)}`);
+                            $('#balanceDisplay').html(`₱ ${parseFloat(datas.balance).toFixed(2)}`);
                         } else {
                             $('#availableBalance').html(`₱ 0.00`);
                             $('#balance').html(`₱ 0.00`);
@@ -148,14 +152,7 @@ if (!isset($_SESSION['user_id'])) {
 
                                 let actionHtml = '';
                                 if (data.status === 'approved') {
-                                    actionHtml = `
-                                <form action="loan_pay.php" method="POST" onsubmit="return confirm('Are you sure you want to pay this loan?');">
-                                    <input type="hidden" name="loan_id" value="${data.id}">
-                                    <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-500">
-                                        Pay Now
-                                    </button>
-                                </form>
-                            `;
+                                    actionHtml = `<button onclick="loanPay(${data['id']}, ${data['amount']})" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-500">Pay Now</button>`;
                                 } else {
                                     actionHtml = `<span class="text-gray-500">Loan Paid</span>`;
                                 }
@@ -189,6 +186,80 @@ if (!isset($_SESSION['user_id'])) {
                 }
             })
         }
+
+        function loanPay(loan_id, amount) {
+            balance = parseFloat($('#balance').val)
+
+            if(amount > balance){
+                return alert("The amount is greater than your current balance")
+            }
+
+            balance = balance - amount
+
+            $.ajax({
+                url: "config/request.php",
+                method: "POST",
+                data: {
+                    'loan_pay': true,
+                    'status': 'paid',
+                    'amount': amount,
+                    'id': loan_id,
+                    'user_id': <?= $_SESSION['user_id'] ?>,
+                    'balance': balance
+                },
+                success: function(){
+                    loadBalance()
+                    loadLoanHistory()
+                    alert("Successfully pay Loan")
+                },
+                error: function(){
+                    alert("Something went wrong")
+                }
+            })
+        }
+
+        $('#loanForm').on('submit', function(e) {
+            e.preventDefault()
+
+            var availableBalance = parseFloat($('#availableBalance').val());
+            var amount = parseFloat($('#amount').val());
+            var balance = parseFloat($('#balance').val());
+            var term = $('#term').val()
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid loan amount.");
+                return;
+            }
+
+            if (amount > availableBalance) {
+                alert("Loan amount must be less than or equal to your available balance.");
+                return;
+            }
+
+            balance = balance + amount
+
+            $.ajax({
+                url: "config/request.php",
+                method: "POST",
+                data: {
+                    'loan_process': true,
+                    'amount': amount,
+                    'term': term,
+                    'balance': balance,
+                    'status': 'approved',
+                    'user_id': <?= $_SESSION['user_id'] ?>
+
+                },
+                success: function(result) {
+                    $('#amount').val('')
+                    loadBalance()
+                    loadLoanHistory()
+                },
+                error: function(result) {
+                    alert("Something went wrong")
+                }
+            })
+        })
     </script>
 </body>
 

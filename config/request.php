@@ -143,3 +143,34 @@ if(isset($_POST['get_loan'])){
     }
     echo json_encode($datas);
 }
+
+if(isset($_POST['loan_process'])){
+    unset($_POST['loan_process']);
+    
+    $auth->update([
+        'balance' => $_POST['balance'],
+        'id' => $_POST['user_id'],
+    ]);
+
+    unset($_POST['balance']);
+
+    $loan->insert([...$_POST]);
+}
+
+if(isset($_POST['loan_pay'])){
+    unset($_POST['loan_pay']);
+    $auth->update([
+        'balance' => $_POST['balance'],
+        'id' => $_POST['user_id'],
+    ]);
+    $transaction->insert([
+        'user_id' => $_POST['user_id'],
+        'type' => 'loan repayment',
+        'amount' => $_POST['amount'],
+        'status' => 'success',
+    ]);
+    unset($_POST['balance']);
+    unset($_POST['user_id']);
+    unset($_POST['amount']);
+    $loan->update([...$_POST]);
+}
