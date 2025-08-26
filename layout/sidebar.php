@@ -23,7 +23,7 @@
         Report and Analysis
       </a>
       <a href="./loan.php" class="block px-4 py-2 rounded hover:bg-gray-700 
-        <?= basename($_SERVER['PHP_SELF']) == 'loan_process.php' ? 'bg-gray-700' : '' ?>">
+        <?= basename($_SERVER['PHP_SELF']) == 'loan.php' ? 'bg-gray-700' : '' ?>">
         Loan
       </a>
       <a href="./settings.php" class="block px-4 py-2 rounded hover:bg-gray-700 

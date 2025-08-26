@@ -2,7 +2,7 @@
 require_once "class/user.php";
 require_once "class/Auth.php";
 require_once "class/Transaction.php";
-require_once "class/LoanClass.php";
+require_once "class/Loan.php";
 
 $auth = new Auth;
 $transaction = new Transaction;
@@ -102,7 +102,11 @@ if(isset($_POST['get_balance'])){
     $availableBalance = 100000 - $totalLoans;
     unset($_POST['status']);
 
-    $auth->select("balance", $_POST);
+    $id = [
+        "id" => $_POST['user_id']
+    ];
+
+    $auth->select("balance", $id);
     $data = $auth->res->fetch_assoc();
     $currentBalance = $data['balance'] ?? 0;
 
@@ -113,6 +117,7 @@ if(isset($_POST['get_balance'])){
 
     echo json_encode($datas);  
     exit;
+
 }
 
 if (isset($_POST['summary'])) {
@@ -125,4 +130,16 @@ if (isset($_POST['chart'])) {
     $chart = $transaction->getChartData($user_id);
     echo json_encode($chart);
     exit;
+}
+
+if(isset($_POST['get_loan'])){
+    unset($_POST['get_loan']);
+    $order = $_POST['order'];
+    unset($_POST['order']);
+    $loan->select("*",[...$_POST]);
+    $datas = [];
+    while($row = $loan->res->fetch_assoc()){
+        array_push($datas, $row);
+    }
+    echo json_encode($datas);
 }

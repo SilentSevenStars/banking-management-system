@@ -4,22 +4,17 @@ require_once "Database.php";
 class Loan extends Database
 {
     private $loan = "loans";
-    private $loan_repayment = "loan_repayments";
 
     public function totalLoans($user_id)
     {
-        try {
-            $stmt = $this->conn->prepare("SELECT SUM(amount) as total_loans FROM $this->loan WHERE user_id = ? AND status='approved'");
-            $stmt->bind_param("i", $user_id);
-            $stmt->execute();
-            $this->res = $stmt->get_result();
-            $row = $this->res->fetch_assoc();
-            $totalLoan = $row['total_loans'];
-
-            return $totalLoan;
-        } catch (Exception $e) {
-            die("Error requesting data. <br>" . $e);
-        }
+        $stmt = $this->conn->prepare("SELECT SUM(amount) as total_loans FROM loans WHERE user_id=? AND status='approved'");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $this->res = $stmt->get_result();
+        $row = $this->res->fetch_assoc();
+        $totalLoans = $row['total_loans'] ?? 0;
+        $stmt->close();
+        return $totalLoans;
     }
 
     public function select($row = "*", $where = NULL, $order = NULL)
