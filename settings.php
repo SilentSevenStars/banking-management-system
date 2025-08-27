@@ -46,6 +46,17 @@ if (!isset($_SESSION['user_id']))
         </div>
     </div>
 
+    <!-- ✅ Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-96 text-center">
+            <h2 class="text-xl font-bold text-green-600 mb-4">✅ Setting Updated</h2>
+            <p class="text-gray-700 mb-6">Your setting has been updated successfully!</p>
+            <button id="closeModal" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">
+                OK
+            </button>
+        </div>
+    </div>
+
     <script type="text/javascript">
         $(document).ready(function() {
             loadInfo(<?= $_SESSION['user_id'] ?>)
@@ -87,13 +98,16 @@ if (!isset($_SESSION['user_id']))
                     ...data_array
                 },
                 success: function() {
+                    $("#successModal").removeClass("hidden")
                     loadInfo()
-                    alert("Update Successfully")
                 },
                 error: function() {
                     alert("Something went wrong")
                 }
             })
+        })
+        $("#closeModal").on("click", function() {
+            $("#successModal").addClass("hidden")
         })
     </script>
 </body>

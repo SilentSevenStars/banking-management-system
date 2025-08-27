@@ -52,7 +52,7 @@ if (isset($_POST['get_transaction'])) {
     unset($_POST['get_transaction']);
     if (isset($_POST['userid'])) {
         $user_id = ['user_id' => $_POST['userid']];
-        $transaction->select("*", $user_id);
+        $transaction->select("*", $user_id, "ORDER BY date DESC LIMIT 10");
     }
     $datas = [];
     while ($row = $transaction->res->fetch_assoc()) {

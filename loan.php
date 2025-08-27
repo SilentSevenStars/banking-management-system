@@ -85,6 +85,26 @@ if (!isset($_SESSION['user_id'])) {
         </main>
     </div>
 
+    <div id="successModalLoan" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-96 text-center">
+            <h2 class="text-xl font-bold text-green-600 mb-4">✅ Apply Loan Successfully</h2>
+            <p class="text-gray-700 mb-6">Your loan has been apply successfully!</p>
+            <button id="closeModalLoan" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <div id="successModalLoanPay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-96 text-center">
+            <h2 class="text-xl font-bold text-green-600 mb-4">✅ Pay Loan Successfully</h2>
+            <p class="text-gray-700 mb-6">Your loan has been pay successfully!</p>
+            <button id="closeModalLoanPay" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">
+                OK
+            </button>
+        </div>
+    </div>
+
     <script type="text/javascript">
         $(document).ready(function() {
             loadBalance()
@@ -188,13 +208,13 @@ if (!isset($_SESSION['user_id'])) {
         }
 
         function loanPay(loan_id, amount) {
-            balance = parseFloat($('#balance').val)
+            balance = parseFloat($('#balance').val())
 
             if(amount > balance){
                 return alert("The amount is greater than your current balance")
             }
 
-            balance = balance - amount
+            balance = balance - amount;
 
             $.ajax({
                 url: "config/request.php",
@@ -205,12 +225,12 @@ if (!isset($_SESSION['user_id'])) {
                     'amount': amount,
                     'id': loan_id,
                     'user_id': <?= $_SESSION['user_id'] ?>,
-                    'balance': balance
+                    'balance': balance,
                 },
                 success: function(){
+                    $("#successModalLoanPay").removeClass("hidden")
                     loadBalance()
                     loadLoanHistory()
-                    alert("Successfully pay Loan")
                 },
                 error: function(){
                     alert("Something went wrong")
@@ -252,6 +272,7 @@ if (!isset($_SESSION['user_id'])) {
                 },
                 success: function(result) {
                     $('#amount').val('')
+                    $("#successModalLoan").removeClass("hidden")
                     loadBalance()
                     loadLoanHistory()
                 },
@@ -259,6 +280,14 @@ if (!isset($_SESSION['user_id'])) {
                     alert("Something went wrong")
                 }
             })
+        })
+
+        $("#closeModalLoan").on("click", function() {
+            $("#successModalLoan").addClass("hidden")
+        })
+
+        $("#closeModalLoanPay").on("click", function() {
+            $("#successModalLoanPay").addClass("hidden")
         })
     </script>
 </body>

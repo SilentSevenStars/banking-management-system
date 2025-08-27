@@ -100,6 +100,27 @@ $data = $user->res->fetch_assoc();
         </main>
     </div>
 
+    <!-- ✅ Success Modal -->
+    <div id="successModalDeposit" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-96 text-center">
+            <h2 class="text-xl font-bold text-green-600 mb-4">✅ Deposit Successfully</h2>
+            <p class="text-gray-700 mb-6" id="deposit">Your balance has been deposi successfully!</p>
+            <button id="closeModalDeposit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <div id="successModalWithdraw" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-96 text-center">
+            <h2 class="text-xl font-bold text-green-600 mb-4">✅ Withdraw Successfully</h2>
+            <p class="text-gray-700 mb-6" id="withdraw"></p>
+            <button id="closeModalWithdraw" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">
+                OK
+            </button>
+        </div>
+    </div>
+
     <script>
         $(document).ready(function() {
             loadTransaction(<?= $_SESSION['user_id'] ?>)
@@ -179,6 +200,9 @@ $data = $user->res->fetch_assoc();
                             'balance': balance,
                         },
                         success: function() {
+                            $("#successModalDeposit").removeClass("hidden")
+                            $('#deposit').html(`Your balance has been Deposit amount of ₱ ${amount} successfully!`)
+                            $('#amountInput').val('')
                             loadInfo(user_id);
                             loadTransaction(user_id);
                         }
@@ -202,6 +226,9 @@ $data = $user->res->fetch_assoc();
                             'balance': balance,
                         },
                         success: function() {
+                            $("#successModalWithdraw").removeClass("hidden")
+                            $('#withdraw').html(`Your balance has been Withdraw amount of ₱ ${amount} successfully!`)
+                            $('#amountInput').val('')
                             loadInfo(user_id);
                             loadTransaction(user_id);
                         }
@@ -220,35 +247,45 @@ $data = $user->res->fetch_assoc();
                     "get_transaction": true,
                     "userid": user_id,
                 },
-                success: function(result) {
-                    let tBody = '';
-                    let datas = JSON.parse(result);
-                    if (datas.length > 0) {
+                success: function(response) {
+                        let datas = JSON.parse(response)
+                        let tBody = ""
+
                         datas.forEach(function(data) {
-                            let typeDisplay = data.type.charAt(0).toUpperCase() + data.type.slice(1);
-                            let amount = parseFloat(data.amount);
-                            let sign = data.type === "withdraw" ? '-' : '+';
-                            let amountDisplay = amount.toFixed(2);
-                            let amountColor = data.type === "withdraw" ? 'text-red-500' : 'text-green-500';
-                            let statusColor = data.status.toLowerCase() === 'success' ? 'text-green-500' : 'text-red-500';
+                            let typeDisplay = data.type.split(" ")
+                                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                .join(" ")
+                            let amount = parseFloat(data.amount)
+
+                            let isDeduction = (data.type === "withdraw" || data.type === "loan repayment")
+                            let sign = isDeduction ? '-' : '+'
+                            let amountDisplay = amount.toFixed(2)
+                            let amountColor = isDeduction ? 'text-red-500' : 'text-green-500'
+                            let statusColor = data.status.toLowerCase() === 'success' ? 'text-green-500' : 'text-red-500'
 
                             tBody += `
-                        <tr class="border-b hover:bg-gray-100">
-                            <td>${typeDisplay}</td>
-                            <td class="${amountColor} font-semibold">${sign}₱${amountDisplay}</td>
-                            <td class="${statusColor} font-semibold">${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</td>
-                            <td>${data.date}</td>
-                        </tr>
-                    `;
+                                <tr class="border-b hover:bg-gray-100">
+                                    <td class="py-3 px-6">${typeDisplay}</td>
+                                    <td class="py-3 px-6 ${amountColor} font-semibold">${sign}₱${amountDisplay}</td>
+                                    <td class="py-3 px-6 ${statusColor} font-semibold">${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</td>
+                                    <td class="py-3 px-6">${data.date}</td>
+                                </tr>
+                            `
                         })
-                    } else {
-                        tBody = `<tr><td colspan="4" class="text-center text-gray-500">No transaction found</td></tr>`;
-                    }
-                    $('#tBodyTransaction').html(tBody);
-                },
+
+                        $("#tBodyTransaction").html(tBody);
+                    },
                 error: function() {
                     alert("Something went wrong");
                 }
+            })
+
+            $("#closeModalDeposit").on("click", function() {
+                $("#successModalDeposit").addClass("hidden")
+            })
+
+            $("#closeModalWithdraw").on("click", function() {
+                $("#successModalWithdraw").addClass("hidden")
             })
         }
     </script>
