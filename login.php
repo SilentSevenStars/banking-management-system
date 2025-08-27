@@ -23,7 +23,7 @@
     </div>
 
     <div class="flex flex-col justify-center items-center w-full md:w-1/2 p-8 text-center">
-      <img src="assets/image/logo.png" alt="Bank Logo" class="w-20 mb-4"/>
+      <img src="assets/image/logo.png" alt="Bank Logo" class="w-40 mb-4"/>
       <h2 class="text-xl font-semibold text-blue-900 mb-6">WELCOME BACK</h2>
 
       <form method="POST" action="config/request.php" class="w-full max-w-xs space-y-4">

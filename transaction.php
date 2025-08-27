@@ -27,19 +27,18 @@ if (!isset($_SESSION['user_id']))
                     <label class="block text-gray-700">Type</label>
                     <select name="type" class="border rounded p-2" id="type">
                         <option value="">All</option>
-                        <option value="deposit" <?= isset($_GET['type']) && $_GET['type'] == 'deposit' ? 'selected' : '' ?>>Deposit</option>
-                        <option value="withdraw" <?= isset($_GET['type']) && $_GET['type'] == 'withdraw' ? 'selected' : '' ?>>Withdraw</option>
-                        <option value="loan" <?= isset($_GET['type']) && $_GET['type'] == 'loan' ? 'selected' : '' ?>>Loan</option>
-                        <option value="repayment" <?= isset($_GET['type']) && $_GET['type'] == 'repayment' ? 'selected' : '' ?>>Repayment</option>
+                        <option value="deposit">Deposit</option>
+                        <option value="withdraw">Withdraw</option>
+                        <option value="loan repayment">Loan Repayment</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-gray-700">Status</label>
                     <select name="status" class="border rounded p-2" id="status">
                         <option value="">All</option>
-                        <option value="success" <?= isset($_GET['status']) && $_GET['status'] == 'success' ? 'selected' : '' ?>>Success</option>
-                        <option value="pending" <?= isset($_GET['status']) && $_GET['status'] == 'pending' ? 'selected' : '' ?>>Pending</option>
-                        <option value="failed" <?= isset($_GET['status']) && $_GET['status'] == 'failed' ? 'selected' : '' ?>>Failed</option>
+                        <option value="success">Success</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
                     </select>
                 </div>
                 <div>
@@ -151,21 +150,61 @@ if (!isset($_SESSION['user_id']))
                 }
             })
         }
-        function exportCSV(user_id){
-            $.ajax({
-                url: "config/request.php",
-                method: "POST",
-                data: {
-                    "export_csv": true,
-                    "user_id": user_id,
-                },
-                success: function(){
-                    alert("Data are now exporting into csv")
-                }, 
-                error: function(){
-                    alert("Something went wrong")
-                }
-            })
+
+        function exportCSV(user_id) {
+            let type = $("#type").val();
+            let status = $("#status").val();
+            let from = $("#from").val();
+            let to = $("#to").val();
+
+            if (type === "" && status === "" && from === "" && to === "") {
+                $.ajax({
+                    url: "config/request.php",
+                    type: "POST",
+                    data: {
+                        export_csv_all: true,
+                        user_id: user_id,
+                        order: "ORDER BY created_at DESC",
+                    },
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function(blob) {
+                        let link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = "all_transactions.csv";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                });
+            } else {
+                // Else → export filtered
+                $.ajax({
+                    url: "config/request.php",
+                    type: "POST",
+                    data: {
+                        export_csv_filtered: 1,
+                        user_id: user_id,
+                        type: type,
+                        status: status,
+                        from: from,
+                        to: to,
+                        order: "ORDER BY created_at DESC",
+                    },
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function(blob) {
+                        let link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = "filtered_transactions.csv";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                });
+            }
         }
     </script>
 </body>

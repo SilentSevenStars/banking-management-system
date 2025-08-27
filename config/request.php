@@ -91,10 +91,35 @@ if(isset($_GET['get_transaction'])){
     }
     echo json_encode($datas);
 }
-if(isset($_POST['export_csv'])){
-    unset($_POST['export_csv']);
-    $transaction->exportCSV("type, amount, status, date", [...$_POST]);
+if (isset($_POST['export_csv_all'])) {
+    unset($_POST['export_csv_all']);
+    $order = "ORDER BY created_at DESC";
+    unset($_POST['order']);
+    $transaction->select("type, amount, status, created_at AS date", [...$_POST], $order);
+
+    $datas = [];
+    while ($row = $transaction->res->fetch_assoc()) {
+        $datas[] = $row;
+    }
+    $transaction->exportCSV($datas);
+    exit;
 }
+
+// Export filtered
+if (isset($_POST['export_csv_filtered'])) {
+    unset($_POST['export_csv_filtered']);
+    $order = $_POST['order'];
+    unset($_POST['order']);
+    $transaction->filter("type, amount, status, created_at AS date", [...$_POST], $order);
+
+    $datas = [];
+    while ($row = $transaction->res->fetch_assoc()) {
+        $datas[] = $row;
+    }
+    $transaction->exportCSV($datas);
+    exit;
+}
+
 if(isset($_POST['get_balance'])){
     unset($_POST['get_balance']);
     $totalLoans = $loan->totalLoans($_POST['user_id']);

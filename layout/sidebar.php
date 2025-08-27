@@ -14,10 +14,6 @@
         <?= basename($_SERVER['PHP_SELF']) == 'transaction.php' ? 'bg-gray-700' : '' ?>">
         Transaction
       </a>
-      <a href="payment.php" class="block px-4 py-2 rounded hover:bg-gray-700 
-        <?= basename($_SERVER['PHP_SELF']) == 'payment.php' ? 'bg-gray-700' : '' ?>">
-        Payment
-      </a>
       <a href="./report_analysis.php" class="block px-4 py-2 rounded hover:bg-gray-700 
         <?= basename($_SERVER['PHP_SELF']) == 'report_analysis.php' ? 'bg-gray-700' : '' ?>">
         Report and Analysis

@@ -24,18 +24,29 @@ class Transaction extends Database
         }
     }
 
-    public function select($row = "*", $where = NULL)
+    public function select($row = "*", $where = NULL, $order = NULL)
     {
         try {
             if (!is_null($where)) {
-                $cond = $types = "";
-                foreach ($where as $key => $value) {
-                    $cond .= $key . " = ? AND ";
-                    $types .= substr(gettype($value), 0, 1);
+                if (!is_null($order)) {
+                    $cond = $types = "";
+                    foreach ($where as $key => $value) {
+                        $cond .= $key . " = ? AND ";
+                        $types .= substr(gettype($value), 0, 1);
+                    }
+                    $cond = substr($cond, 0, -4);
+                    $stmt = $this->conn->prepare("SELECT $row FROM $this->table WHERE $cond $order");
+                    $stmt->bind_param($types, ...array_values($where));
+                } else {
+                    $cond = $types = "";
+                    foreach ($where as $key => $value) {
+                        $cond .= $key . " = ? AND ";
+                        $types .= substr(gettype($value), 0, 1);
+                    }
+                    $cond = substr($cond, 0, -4);
+                    $stmt = $this->conn->prepare("SELECT $row FROM $this->table WHERE $cond");
+                    $stmt->bind_param($types, ...array_values($where));
                 }
-                $cond = substr($cond, 0, -4);
-                $stmt = $this->conn->prepare("SELECT $row FROM $this->table WHERE $cond");
-                $stmt->bind_param($types, ...array_values($where));
             } else {
                 $stmt = $this->conn->prepare("SELECT $row FROM $this->table");
             }
@@ -45,19 +56,19 @@ class Transaction extends Database
             die("Error requesting data!. <br>" . $e);
         }
     }
-    public function filter($row = "*", $where = NULL)
+    public function filter($row = "*", $where = NULL, $order = NULL)
     {
         try {
             if (!is_null($where)) {
                 $cond = $types = "";
                 foreach ($where as $key => $value) {
-                    if (!empty($value) or $value != "all") {
+                    if (!empty($value)) {
                         if ($key === "from") {
                             $cond .= "DATE(created_at) >= ? AND ";
-                            $types .= substr(gettype($value),0,1);
+                            $types .= substr(gettype($value), 0, 1);
                         } elseif ($key === "to") {
                             $cond .= "DATE(created_at) <= ? AND ";
-                            $types .= substr(gettype($value),0,1);
+                            $types .= substr(gettype($value), 0, 1);
                         } else {
                             $cond .= $key . " = ? AND ";
                             $types .= substr(gettype($value), 0, 1);
@@ -65,8 +76,13 @@ class Transaction extends Database
                     }
                 }
                 $cond = substr($cond, 0, -4);
-                $stmt = $this->conn->prepare("SELECT $row FROM $this->table WHERE $cond");
-                $stmt->bind_param($types, ...array_values($where));
+                if (!is_null($order)) {
+                    $stmt = $this->conn->prepare("SELECT $row FROM $this->table WHERE $cond $order");
+                    $stmt->bind_param($types, ...array_values($where));
+                } else {
+                    $stmt = $this->conn->prepare("SELECT $row FROM $this->table WHERE $cond");
+                    $stmt->bind_param($types, ...array_values($where));
+                }
             } else {
                 $stmt = $this->conn->prepare("SELECT $row FROM $this->table");
             }
@@ -136,40 +152,29 @@ class Transaction extends Database
         }
     }
 
-    public function exportCSV($row, $where)
+    public function exportCSV($datas)
     {
         try {
-            $cond = $types = "";
-                foreach ($where as $key => $value) {
-                    $cond .= $key . " = ? AND ";
-                    $types .= substr(gettype($value), 0, 1);
-                }
-                $cond = substr($cond, 0, -4);
-                $stmt = $this->conn->prepare("SELECT $row FROM $this->table WHERE $cond ORDER BY date DESC");
-                $stmt->bind_param($types, ...array_values($where));
-            $stmt->execute();
-            $this->res = $stmt->get_result();
-
             header('Content-Type: text/csv; charset=utf-8');
             header('Content-Disposition: attachment; filename=transactions.csv');
             $output = fopen('php://output', 'w');
             fputcsv($output, ['Type', 'Amount', 'Status', 'Date']);
-            while($row = $this->res->fetch_assoc()){
+            foreach ($datas as $data) {
                 fputcsv($output, [
-                    ucfirst($row['type']),
-                    $row['amount'],
-                    ucfirst($row['status']),
-                    $row['date'],
+                    ucfirst($data['type']),
+                    $data['amount'],
+                    ucfirst($data['status']),
+                    $data['date'],   // ✅ now using alias
                 ]);
             }
             fclose($output);
-            $stmt->close();
         } catch (Exception $e) {
-            die("Error requesting data!. <br>" . $e);
+            die("Error exporting data!. <br>" . $e);
         }
     }
 
-    public function getSummary($user_id) {
+    public function getSummary($user_id)
+    {
         $summary = ["deposit" => 0, "withdraw" => 0, "balance" => 0];
         $stmt = $this->conn->prepare("
             SELECT type, SUM(amount) as total 
@@ -187,7 +192,8 @@ class Transaction extends Database
         return $summary;
     }
 
-    public function getChartData($user_id) {
+    public function getChartData($user_id)
+    {
         $chartData = [];
         $stmt = $this->conn->prepare("
             SELECT DATE_FORMAT(created_at, '%Y-%m') as month, 
