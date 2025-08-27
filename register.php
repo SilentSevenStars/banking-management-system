@@ -18,11 +18,11 @@
     <div class="flex bg-white rounded-2xl shadow-2xl overflow-hidden max-w-5xl w-full h-[600px]">
 
     <div class="hidden md:flex w-1/2">
-      <img src="images/bank-bg.jpg" alt="Bank Background" class="w-full h-full object-cover">
+      <img src="assets/image/logo.png" alt="Bank Background" class="w-full h-full object-cover">
     </div>
 
     <div class="flex flex-col justify-center items-center w-full md:w-1/2 p-8 text-center">
-      <img src="images/bank-logo.png" alt="Bank Logo" class="w-20 mb-4">
+      <img src="assets/image/logo.png" alt="Bank Logo" class="w-20 mb-4">
       <h2 class="text-xl font-semibold text-blue-900 mb-6">CREATE YOUR ACCOUNT</h2>
 
       <form method="POST" action="config/request.php" class="w-full max-w-xs space-y-4">

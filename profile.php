@@ -1,10 +1,10 @@
 <?php
-    session_start();
+session_start();
 
-    if(!isset($_SESSION['user_id']))
-        header("Location: login.php");
-
-    $id = $_SESSION['user_id'];
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
 
 ?>
 <!DOCTYPE html>
@@ -14,8 +14,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile - PRT Bank</title>
-    <script type="text/javascript" src="assets/js/tailwind.js"></script>
     <script type="text/javascript" src="assets/js/jquery.min.js"></script>
+    <script type="text/javascript" src="assets/js/tailwind.js"></script>
 </head>
 
 <body class="bg-gray-100 font-sans">
@@ -61,58 +61,69 @@
     </div>
 
     <script type="text/javascript">
-        $(document).ready(function(){
-            loadProfile(<?= $id ?>)
-        })
+        $(document).ready(function () {
+            loadProfile();
 
-        function loadProfile(user_id){
-            $.ajax({
-                url: "config/request.php",
-                method: "POST",
-                data: {
-                    "get_profile": true,
-                    "userId": user_id,
-                }, 
-                success: function(result){
-                    let datas = JSON.parse(result)
-                    datas.forEach(function(data) {
-                        $('#id').val(data['id'])
-                        $('#username').val(data['username'])
-                        $('#email').val(data['email'])
-                        $('#phone').val(data['phone'])
-                        $('#address').val(data['address'])
-                        $('#balance').text("₱" + parseFloat(data['balance']).toLocaleString(undefined, {minimumFractionDigits: 2}))
-                    })
-                },
-                error: function(e){
-                    alert("Something went wrong")
-                }
-            })
-        }
+            function loadProfile() {
+                $.ajax({
+                    url: "config/request.php",
+                    method: "POST",
+                    data: {
+                        get_profile: true,
+                        userId: <?= $_SESSION['user_id'] ?>,
+                    },
+                    success: function (result) {
+                        try {
+                            let datas = JSON.parse(result);
+                            datas.forEach(function (data) {
+                                $("#id").val(data["id"]);
+                                $("#username").val(data["username"]);
+                                $("#email").val(data["email"]);
+                                $("#phone").val(data["phone"]);
+                                $("#address").val(data["address"]);
+                                $("#balance").text("₱" + parseFloat(data["balance"]).toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                }));
+                            });
+                        } catch (e) {
+                            console.error("Invalid JSON:", result);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Profile load error:", status, error);
+                        alert("Something went wrong while loading profile");
+                    },
+                });
+            }
 
-        $('#updateProfileForm').on('submit', function(e){
-            e.preventDefault()
-            var datas = $(this).serializeArray()
-            var data_array = {}
-            $.map(datas, function(data){
-                data_array[data['name']] = data['value']
-            })
-            $.ajax({
-                url: "config/request.php",
-                method: "POST",
-                data: {
-                    'update_profile': true,
-                    ...data_array
-                },
-                success: function(){
-                    loadProfile()
-                }, 
-                error: function(){
-                    alert("Something went wrong")
-                }
-            })
-        })
+            // Handle form submit
+            $("#updateProfileForm").on("submit", function (e) {
+                e.preventDefault();
+                let datas = $(this).serializeArray();
+                let data_array = {};
+                $.map(datas, function (data) {
+                    data_array[data["name"]] = data["value"];
+                });
+
+                $.ajax({
+                    url: "config/request.php",
+                    method: "POST",
+                    data: {
+                        update_profile: true,
+                        ...data_array,
+                    },
+                    success: function (response) {
+                        console.log("Update success:", response);
+                        openModal();
+                        loadProfile();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Update error:", status, error);
+                        alert("Something went wrong while updating");
+                    },
+                });
+            });
+        });
     </script>
 </body>
-
 </html>
